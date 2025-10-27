@@ -1,17 +1,31 @@
 import app from './app';
 import envConfig from './config/environment.config';
+import { closeDb, connectDb } from './config/mongodb.config';
 
 const appEnv = envConfig.app;
 
-const server = app.listen(appEnv.port, appEnv.host, () => {
-  console.info(`Server is running in: http://${appEnv.host}:${appEnv.port}`);
-});
+void (async () => {
+  try {
+    console.info('1. Connecting to MongoDB Cloud...');
+    // Connect to MongoDb Cloud
+    await connectDb();
+    console.info('2. Connected to MongoDB Cloud');
 
-process.on('SIGINT', () => {
-  console.info('Server closed');
-  server.close((error) => {
-    if (error) {
-      console.error('Close Server has error');
-    }
-  });
-});
+    // Start Server
+    const server = app.listen(appEnv.port, appEnv.host, () => {
+      console.info(`Server is running in: http://${appEnv.host}:${appEnv.port}`);
+    });
+
+    // Shutdown handler
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises
+    process.on('SIGINT', async () => {
+      console.info('Close Server');
+      await closeDb();
+      server.close();
+      process.exit(1);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  }
+})();
