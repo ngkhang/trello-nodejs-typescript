@@ -11,7 +11,7 @@ interface EnvironmentsType {
   };
 }
 
-type Environment = 'development';
+type Environment = 'development' | 'production';
 
 export const nodeEnv = (process.env.NODE_ENV || 'development') as Environment;
 
@@ -26,8 +26,20 @@ const development: EnvironmentsType = {
   },
 };
 
+const production: EnvironmentsType = {
+  app: {
+    host: process.env.APP_HOST || '',
+    port: process.env.APP_PORT ? Number(process.env.APP_PORT) : 8017,
+  },
+  db: {
+    mongoName: process.env.DB_MONGO_NAME || 'ngkhang',
+    mongoUri: process.env.DB_MONGO_URI || '',
+  },
+};
+
 const envConfigs: Record<Environment, EnvironmentsType> = {
   development,
+  production,
 };
 
 const envConfig = envConfigs[nodeEnv];

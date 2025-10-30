@@ -1,12 +1,15 @@
 import express from 'express';
 
+import { errorHandlerMiddleware, notFoundHandler } from '@middlewares/error-handler.middleware';
+
 const app = express();
 
-// Initialize router
-app.get('/', (req, res) =>
-  res.status(200).json({
-    message: 'Initialized Router',
-  }),
-);
+app.use(express.json());
+
+// 404 Handler - catches undefined routes
+app.use(notFoundHandler);
+
+// Error Handler - catches all errors
+app.use(errorHandlerMiddleware);
 
 export default app;
