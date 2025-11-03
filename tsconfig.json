@@ -20,7 +20,8 @@
       "@providers/*": ["src/providers/*"],
       "@routes/*": ["src/routes/*"],
       "@services/*": ["src/services/*"],
-      "@utils/*": ["src/utils/*"]
+      "@utils/*": ["src/utils/*"],
+      "@validations/*": ["src/validations/*"]
     },
     "skipLibCheck": true,
     "strictNullChecks": true,
