@@ -3,9 +3,10 @@ import { StatusCodes } from 'http-status-codes';
 import { boardService } from '@services/board.service';
 
 import type { NextFunction, Request, Response } from 'express';
+import type { CreateBoardDto } from 'src/types/board.type';
 
 const createBoard = async (
-  req: Request<object, object, { title: string; description: string }>,
+  req: Request<object, object, CreateBoardDto>,
   res: Response,
   next: NextFunction,
 ): Promise<void> => {

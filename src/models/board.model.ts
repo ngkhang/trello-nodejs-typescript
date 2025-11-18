@@ -4,27 +4,15 @@ import { ObjectId } from 'mongodb';
 import { getDb } from '@config/mongodb.config';
 import { OBJECT_ID_RULE, OBJECT_ID_RULE_MESSAGE } from '@utils/validators.util';
 
-import type { InsertOneResult } from 'mongodb';
+import type { IBoard, IBoardValidate } from 'src/types/board.type';
 
-interface IBoard {
-  _id: ObjectId;
-  title: string;
-  slug: string;
-  description: string;
-  columnOrderIds: string[];
-  createdAt: Date;
-  updatedAt: Date | null;
-  _destroy: boolean;
-}
-
-interface IBoardInput extends Omit<IBoard, '_id'> {
-  _id?: ObjectId;
-}
+type IBoardDocument = Omit<IBoard, '_id'> & { _id: ObjectId };
 
 // Define collection name
 const BOARD_COLLECTION_NAME = 'boards';
+
 // Define collection schema
-const BOARD_COLLECTION_SCHEMA = Joi.object<IBoardInput>({
+const BOARD_COLLECTION_SCHEMA = Joi.object<IBoardValidate>({
   title: Joi.string().required().min(3).max(50).trim().strict(),
   slug: Joi.string().required().min(3).trim().strict(),
   description: Joi.string().required().min(3).max(256).trim().strict(),
@@ -34,27 +22,37 @@ const BOARD_COLLECTION_SCHEMA = Joi.object<IBoardInput>({
   _destroy: Joi.boolean().default(false),
 });
 
-const validationModel = async (data: Partial<IBoardInput>): Promise<IBoardInput> =>
+const validateCreateBoard = async (data: Partial<IBoardValidate>): Promise<IBoardValidate> =>
   await BOARD_COLLECTION_SCHEMA.validateAsync(data, { abortEarly: false });
 
-const insertNewBoard = async (data: Partial<IBoard>): Promise<InsertOneResult> => {
+const insertNewBoard = async (data: Partial<IBoard>): Promise<{ acknowledged: boolean; insertedId: string }> => {
   try {
-    const validData = await validationModel(data);
-    return await getDb().collection(BOARD_COLLECTION_NAME).insertOne(validData);
+    const validData = await validateCreateBoard(data);
+    const { acknowledged, insertedId } = await getDb().collection(BOARD_COLLECTION_NAME).insertOne(validData);
+
+    return {
+      acknowledged,
+      insertedId: insertedId.toString(),
+    };
   } catch (error) {
     throw new Error(error);
   }
 };
 
-const findOneById = async (id: ObjectId): Promise<IBoard | null> => {
+const findOneById = async (id: string): Promise<IBoard | null> => {
   try {
     const board = await getDb()
-      .collection<IBoard>(BOARD_COLLECTION_NAME)
+      .collection<IBoardDocument>(BOARD_COLLECTION_NAME)
       .findOne({
         _id: new ObjectId(id),
       });
 
-    return board;
+    if (!board) return null;
+
+    return {
+      ...board,
+      _id: board._id.toString(),
+    };
   } catch (error) {
     throw new Error(error);
   }

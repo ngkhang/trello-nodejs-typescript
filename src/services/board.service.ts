@@ -1,35 +1,22 @@
 /* eslint-disable no-useless-catch */
-
 import { BoardModel } from '@models/board.model';
 import { slugify } from '@utils/formatter.util';
 
-import type { ObjectId } from 'mongodb';
+import type { CreateBoardDto, IBoard } from 'src/types/board.type';
 
-interface BoardResponse {
-  _id: ObjectId;
-  title: string;
-  slug: string;
-  description: string;
-  columnOrderIds: string[];
-  createdAt: Date;
-  updatedAt: Date | null;
-  _destroy: boolean;
-}
-
-const createNewBoard = async (data: { title: string; description: string }): Promise<BoardResponse> => {
+const createNewBoard = async (createBoardDto: CreateBoardDto): Promise<IBoard> => {
   try {
-    const newBoard = {
-      ...data,
-      slug: slugify(data.title),
-    };
+    const { insertedId } = await BoardModel.insertNewBoard({
+      ...createBoardDto,
+      slug: slugify(createBoardDto.title),
+    });
 
-    const { insertedId } = await BoardModel.insertNewBoard(newBoard);
-    const createdNewBoard = await BoardModel.findOneById(insertedId);
-
-    if (!createdNewBoard) {
+    const newBoard = await BoardModel.findOneById(insertedId);
+    if (!newBoard) {
       throw new Error('Failed to retrieve created board');
     }
-    return createdNewBoard;
+
+    return newBoard;
   } catch (error) {
     throw error;
   }
